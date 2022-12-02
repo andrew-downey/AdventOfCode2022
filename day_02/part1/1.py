@@ -44,4 +44,4 @@ if __name__ == "__main__":
     start = time()
     main()
     end = time()
-    print(f'Finished in {round(end - start, 2)} seconds')
+    print(f'Finished in {round((end - start) * 1000, 5)} milliseconds')

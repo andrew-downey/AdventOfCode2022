@@ -9,11 +9,11 @@ def main():
     with open(filename, "r") as myfile:
         rows = myfile.read().splitlines()
 
-    print("Rows: {0}".format(rows))
+    print(f"Rows: {rows}")
 
 
 if __name__ == "__main__":
     start = time()
     main()
     end = time()
-    print(f'Finished in {round(end - start, 2)} seconds')
+    print(f'Finished in {round((end - start) * 1000, 5)} milliseconds')
