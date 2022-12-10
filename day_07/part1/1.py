@@ -3,11 +3,11 @@ import os
 from time import time
 import re
 
-
+total = 0
 class File:
-    files: dict
-    parent: str
-    size: int
+    files: dict[str, 'File']
+    parent: 'File' = None
+    size: int = 0
 
     def __init__(self) -> None:
         self.files = dict()
@@ -17,9 +17,25 @@ class File:
         return self
 
     def set_size(self, size):
-        self.size = size
+        self.size = int(size)
         return self
 
+    def add_size(self, size):
+        self.size += int(size)
+        return self
+
+    def recurse(self, filename:str, indent: int):
+        if len(self.files) > 0:
+            for name, file in self.files.items():
+                file.recurse(name, indent+1)
+
+        if self.parent:
+            self.parent.add_size(self.size)
+
+        print(f"{'!' if self.size <= 100000 and len(self.files) > 0 else ' '}{'  ' * indent} - {'(dir)' if len(self.files) > 0 else ''} {filename} ({'{:,}'.format(self.size)})")
+        if self.size <= 100000 and len(self.files) > 0:
+            global total
+            total += self.size
 
 def main():
     dirname = os.path.dirname(__file__)
@@ -47,7 +63,8 @@ def main():
                 .set_parent(pointer)\
                 .set_size(tokens[0])
 
-    print(root)
+    root.recurse('/', 1)
+    print(f'\n Total: {total}')
 
 
 if __name__ == "__main__":
