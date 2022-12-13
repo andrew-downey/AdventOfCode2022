@@ -68,7 +68,7 @@ def main():
 
 
 if __name__ == "__main__":
-    start = time()
+    challenge_start_time= time()
     main()
-    end = time()
-    print(f'Finished in {round((end - start) * 1000, 5)} milliseconds')
+    challenge_end_time = time()
+    print(f'Finished in {round((challenge_end_time  - challenge_start_time) * 1000, 5)} milliseconds')
