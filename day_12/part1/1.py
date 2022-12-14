@@ -2,57 +2,7 @@
 import os
 from time import time
 from colorama import Style
-
-start: tuple[int, int]
-target_point: tuple[int, int]
-global_paths: list[tuple[int, int]] = []
-
-def explore(grid: dict[int, dict[int, int]], current_pos: tuple[int, int]):
-    visited.append(current_pos)
-
-    #     for y, i in grid.items():
-    #         for x, j in i.items():
-    #             tup = (y, x)
-    #             print(f"{Style.BRIGHT if (tup in visited) else Style.DIM} {'#' if (tup in visited) else '.'}{Style.RESET_ALL}", end='')
-    #         print()
-    #     print()
-
-    y, x = current_pos
-    current_height = grid[y][x]
-    for ny, nx in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]:
-        if (ny, nx) not in visited and nx >= 0 and ny >= 0 and nx < len(grid[0]) and ny < len(grid):
-            new_height = grid[ny][nx]
-            if abs(current_height - new_height) <= 1:
-                queue.append((ny, nx))
-
-    global target_point
-    visited = {}
-    queue = {(0, 0): 0}
-    while len(queue) > 0:
-            # cache stack is empty or invalid, nullify it and find the minimum
-            current_cost = min(queue.values())
-            minimums_cache_stack = []
-            current_cost_index = list(queue.values()).index(current_cost)
-            current_node = list(queue.keys())[current_cost_index]
-
-        for neighbour, cost in graph[current_node].items():
-            if neighbour not in visited:
-                new_cost = MAXINT
-                try:
-                    new_cost = queue[neighbour]
-                except KeyError:
-                    pass
-                candidate_cost = current_cost + cost
-                if candidate_cost < new_cost:
-                    queue[neighbour] = candidate_cost
-                    if new_cost <= current_minimum:
-                        current_minimum = new_cost
-
-        visited[current_node] = current_cost
-        del queue[current_node]
-
-        if(current_node == target_point):
-            break
+from collections import defaultdict
 
 def main():
     dirname = os.path.dirname(__file__)
@@ -60,8 +10,8 @@ def main():
     with open(filename, "r") as myfile:
         rows = myfile.read().splitlines()
 
-    global start
-    global end
+    start: tuple[int, int]
+    end: tuple[int, int]
     start_height = ord('a')
     end_height = ord('z')
     grid: dict[int, dict[int, int]] = dict()
@@ -87,21 +37,72 @@ def main():
         print()
     print(Style.RESET_ALL)
 
-    explore(grid, start, [])
 
-    global global_paths
-    global_paths = sorted(global_paths, key=lambda path: len(path))
+    y, x = start
+    graph = defaultdict(dict)
+    # Add an edge for each neighbour
+    for y, row in grid.items():
+        for x, new_height in row.items():
+            for ny, nx in [(1, 0), (-1, 0), (0, -1), (0, 1)]:
+                if(y + ny < len(grid) and y + ny >= 0 and x + nx < len(grid[0]) and x + nx >= 0):
+                    graph[(y, x)][(y + ny, x + nx)] = new_height
 
-    # [print(f"{len(path)} {path}") for path in global_paths]
-    for path in range(min(len(global_paths), 3)):
-        print(f"{path} ({len(global_paths[path] - 1)} steps)")
-        for y, i in grid.items():
-            for x, j in i.items():
-                tup = (y, x)
-                print(f"{Style.BRIGHT if (tup in global_paths[path]) else Style.DIM} {j:>3}{Style.RESET_ALL}", end='')
-            print()
-        print()
+    visited = {start: start_height}
+    parents = {}
+    queue = {start: start_height}
+    while len(queue) > 0:
+        # cache stack is empty or invalid, nullify it and find the minimum
+        current_cost = min(queue.values())
+        current_cost_index = list(queue.values()).index(current_cost)
+        current_node = list(queue.keys())[current_cost_index]
 
+        for neighbour, cost in graph[current_node].items():
+            height_difference = grid[neighbour[0]][neighbour[1]] - grid[current_node[0]][current_node[1]]
+            if neighbour not in visited and height_difference <= 1:
+                new_cost = 99999
+                try:
+                    new_cost = queue[neighbour]
+                except KeyError:
+                    pass
+                candidate_cost = current_cost + cost
+                if candidate_cost < new_cost:
+                    queue[neighbour] = candidate_cost
+                    parents[neighbour] = current_node
+
+        visited[current_node] = current_cost
+        del queue[current_node]
+
+        # for y, i in grid.items():
+        #     for x, j in i.items():
+        #         tup = (y, x)
+        #         print(f"{Style.BRIGHT if (tup in visited) else Style.DIM} {j:>3}{Style.RESET_ALL}", end='')
+        #     print()
+        # print()
+
+        if(current_node == end):
+            break
+
+    node = end
+    backpath = [end]
+    path = []
+    while node != start:
+        backpath.append(parents[node])
+        node = parents[node]
+    for i in range(len(backpath)):
+        path.append(backpath[-i - 1])
+
+    print(len(path) - 1)
+    print(path)
+
+    # # [print(f"{len(path)} {path}") for path in global_paths]
+    # for path in range(min(len(global_paths), 3)):
+    #     print(f"{path} ({len(global_paths[path] - 1)} steps)")
+    #     for y, i in grid.items():
+    #         for x, j in i.items():
+    #             tup = (y, x)
+    #             print(f"{Style.BRIGHT if (tup in global_paths[path]) else Style.DIM} {j:>3}{Style.RESET_ALL}", end='')
+    #         print()
+    #     print()
 
 
 
