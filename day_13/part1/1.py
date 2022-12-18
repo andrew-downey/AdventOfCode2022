@@ -1,86 +1,62 @@
 #!/usr/bin/env python3
 import os
 from time import time
+from itertools import zip_longest
 
-ints = []
 def compare(left, right, indent: int = 0):
-    result = None
+    print(f"{'  ' * indent}- Compare {left} vs {right}")
+    if left is None:
+        print(f"{'  ' * indent}- left is None, returning True")
+        return True
+    if right is None:
+        print(f"{'  ' * indent}- right is None, returning False")
+        return False
 
-    print(f"{' ' * indent}Comparing:\n  {left}\n  {right}")
-    for i, part_l in enumerate(left):
-        if i >= len(right):
-            result = False
-            break
-        part_r = right[i]
-
-        if isinstance(part_l, int) and isinstance(part_r, int):
-            if part_l == part_r:
-                result = None
-            else:
-                result = part_l < part_r
-
-            break
-        elif isinstance(part_l, list) and isinstance(part_r, list):
-            nested_result = compare(part_l, part_r, indent + 1)
-            if nested_result != None:
-                result = nested_result
-                break
+    if isinstance(left, int) and isinstance(right, int):
+        if left != right:
+            print(f"{'  ' * indent}- Integers aren't equal, so {left < right}")
+            return left < right
         else:
-            if isinstance(part_l, list):
-                nested_result = compare(part_l, [part_r], indent + 1)
-            else:
-                nested_result = compare([part_l], part_r, indent + 1)
-
-            if nested_result != None:
-                result = nested_result
-                break
-
-    if result == None:
-        result = len(left) > len(right)
-
-    print(f"{' ' * indent}{result}")
-    return result
-
-def nested_sum(packets: list):
-    numbers = []
-    for bit in packets:
-        if isinstance(bit, int):
-            numbers.append(bit)
-        else:
-            numbers.append(nested_sum(bit))
-
-    return sum(numbers)
+            print(f"{'  ' * indent}- Integers are equal, so continue")
+            return None
+    elif isinstance(left, list) and isinstance(right, list):
+        for new_left, new_right in zip_longest(left, right):
+            result = compare(new_left, new_right, indent + 1)
+            if result != None:
+                return result
+        return None
+    else:
+        print(f"{'  ' * indent}- Mixed types; convert to array and retry comparison")
+        new_left = [left] if isinstance(left, int) else left
+        new_right = [right] if isinstance(right, int) else right
+        return compare(new_left, new_right, indent + 1)
 
 
 def main():
     dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, '../example.txt')
+    filename = os.path.join(dirname, '../input.txt')
     with open(filename, "r") as myfile:
         rows = myfile.read().splitlines()
 
     packet_count = 0
     first_part = None
     second_part = None
-    correct_packets:list[tuple[list[int], list[int]]] = []
-    for i, row in enumerate(rows):
-        if i % 3 == 0:
-            first_part = eval(row)
-        elif i % 3 == 1:
-            second_part = eval(row)
-            packet_count += 1
-        else:
-            result = compare(first_part, second_part)
-            if result:
-                correct_packets.append(packet_count)
-            first_part = None
-            second_part = None
+    correct_packet_sum: int = 0
+    packets = [row for row in rows if len(row) > 0]
+    for i in range(0, len(packets), 2):
+        packet_count += 1
+        first_part = eval(packets[i])
+        second_part = eval(packets[i + 1])
+        print()
+        result = compare(first_part, second_part)
 
+        if result:
+            correct_packet_sum += packet_count
+        elif result == None:
+            raise Exception(f"!!!!! No result determined for {first_part} Vs. {second_part}")
 
-    print("Correct packets: ")
-    print(correct_packets)
-    print(sum(correct_packets))
-    # print(f"Answer: {nested_sum(correct_packets)}")
-
+    print()
+    print(f"Answer: {correct_packet_sum}")
 
 
 if __name__ == "__main__":
